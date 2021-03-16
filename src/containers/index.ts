@@ -1,2 +1,2 @@
-export { HomePage } from './home.page';
-export { MenuAdmin } from './menu-admin.page';
+export { HomePage } from './home/home.page';
+export { AdminPage } from './admin/admin.page';
