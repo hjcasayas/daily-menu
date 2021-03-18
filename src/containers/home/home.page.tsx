@@ -1,9 +1,10 @@
 import { DishViewModel } from "./view-models/dish.view-model";
-import { Card, Row, Col, Typography, Layout, Button, Empty } from "antd";
+import { Card, Row, Col, Typography, Layout, Button, Empty, message } from "antd";
 import Image from "next/image";
 import { PlusOutlined, MinusOutlined } from "@ant-design/icons";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { OrderViewModel } from "./view-models/order.view-model";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 export interface HomePageProps {
   menu: DishViewModel[];
@@ -11,6 +12,7 @@ export interface HomePageProps {
 
 const HomePage = ({ menu }: HomePageProps) => {
   const [orders, setOrders] = useState<OrderViewModel[]>([]);
+  const [ordersText, setOrdersText] = useState('');
 
   const setCount = (dishId: number, crement: number) => {
     let currentOrder = orders.find(order => order.dishId === dishId);
@@ -33,6 +35,18 @@ const HomePage = ({ menu }: HomePageProps) => {
     setOrders([...currentOrders.filter(order => order.count !== 0)]);
   }
 
+  const onCopyToClipboard = () => {
+    let textString = '';
+
+    orders.forEach(order => {
+      const currentText = `${order.dishName} - ${order.count}\n`;
+      textString += currentText;
+    });
+
+    setOrdersText(textString);
+    message.success('Successfully copied orders.');
+  }
+
   return (
     <Layout>
         <Layout.Header>
@@ -42,7 +56,7 @@ const HomePage = ({ menu }: HomePageProps) => {
           <Layout.Content>
               <Row>
                 {menu.map((dish) => (
-                  <Col key={dish.id} span={8}>
+                  <Col key={dish.id} xs={24} sm={24} lg={12} xl={8}>
                     <Card
                       title={dish.name}
                       actions={[
@@ -70,16 +84,20 @@ const HomePage = ({ menu }: HomePageProps) => {
                 ))}
             </Row>
           </Layout.Content>
-          <Layout.Sider theme="light">
-            <Card title="Order Summary">
+          <Layout.Sider width={320} trigger={null} breakpoint='md' collapsedWidth={0} theme="light">
+            <Card bordered={false} className="order-summary" title="Order Summary">
               {orders.map(order => (
-                <>
-                  <div>{order.dishName}</div>
-                  <div>{order.count}</div>
-                </>
+                  <div key={order.dishId} className="order-summary__item">
+                    <div className="order-summary__item-name"><Typography.Text strong>{order.dishName}</Typography.Text></div>
+                    <div className="order-summary__count-wrapper">
+                      <MinusOutlined onClick={() => setCount(order.dishId, -1)} className="order-summary__count-icon" />
+                      <span className="order-summary__count-text">{order.count}</span>
+                      <PlusOutlined onClick={() => setCount(order.dishId, 1)} className="order-summary__count-icon" />
+                    </div>
+                  </div>
               ))}
               {
-                orders.length ? <Button>Copy to Clipboard</Button> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Orders</span>} />
+                orders.length ? <CopyToClipboard text={ordersText} onCopy={onCopyToClipboard}><Button>Copy to Clipboard</Button></CopyToClipboard> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Orders</span>} />
               }
             </Card>
           </Layout.Sider>
